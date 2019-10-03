@@ -2,8 +2,8 @@
 
 # procedure-infrastructure-injection-handle
 This SP can give you tow things
-1. infrastructure for SP that handle with injaction whan you query is Dynamic SQL 
-2. infrastructure for SP that get one or more values and bring back results from your query.
+1. Infrastructure for SP that handle with an injection when you query is Dynamic SQL  
+2. Infrastructure for SP that gets one or more values and brings back results from your query.
 
 
 
