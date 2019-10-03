@@ -1,0 +1,87 @@
+CREATE PROCEDURE [dbo].[Sp_injection_handle](@ListIn NVARCHAR(MAX))
+AS
+
+
+BEGIN
+
+/*** injection handle ***/
+
+IF @ListIn like ('%;%')
+OR @ListIn like ('%''''%') 
+OR @ListIn like ('%--%')
+OR @ListIn like ('%/* ... */%')
+OR @ListIn like ('%xp_%')
+	BEGIN
+		PRINT 'SQL-INJECTION alert' --You can add\edit the action that you want to implement
+		RETURN
+	END
+	ELSE
+	BEGIN
+		GOTO StartTheSP
+	END
+StartTheSP:
+
+/*** Return error message when the SP get NULL value ***/
+
+	IF @ListIn IS NULL 
+		BEGIN
+		RAISERROR('The value for @ListIn should not be null', 15, 1)
+		RETURN 
+		END
+	ELSE
+		BEGIN
+		BEGIN TRY
+
+/*** Declare variable ***/
+
+		DECLARE	    
+					@sql NVARCHAR(MAX),
+					@List NVARCHAR(MAX)
+			 	
+		SET @List = @ListIn
+
+/*************** Checking if the SP parameter get one value or more then one value  *****************/
+/**************** if SP get the value ALL, return all the records from the query ********************/
+/******* if SP get one or more exists values then return the information about these values  ********/
+
+
+
+			IF @List = 'ALL'
+				BEGIN 
+					SET @sql = 'SELECT UserDescription 
+								FROM UserTable'
+--===================================================================================--
+--===================================================================================--
+--====================your query for all cases - the sp get the parameter ALL========--
+--===================================================================================--
+--===================================================================================--
+				END
+			ELSE
+				BEGIN
+					SET @sql = 'SELECT UserDescription 
+								FROM UserTable
+								WHERE User_Id IN ('+@List +' )'
+
+				END
+--======================================================================================--
+--======================================================================================--
+--====================your query for 1 to N cases - the sp can get 1 to N params========--
+--======================================================================================--
+--======================================================================================--
+
+EXEC sp_sqlexec @sql
+		
+		END TRY
+		BEGIN CATCH
+			DECLARE @ErrorMessage nvarchar (4000), @ErrorSeverity int, @ErrorState int ;
+ 
+			SELECT
+			@ErrorMessage = ERROR_MESSAGE () ,
+			@ErrorSeverity = ERROR_SEVERITY () ,
+			@ErrorState = ERROR_STATE () ;
+
+				RAISERROR (@ErrorMessage,@ErrorSeverity,@ErrorState);
+	
+		END CATCH
+		END
+END
